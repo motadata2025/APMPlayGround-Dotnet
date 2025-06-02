@@ -1,0 +1,74 @@
+## Ignore Visual Studio temporary files, build results, and
+## user-generated files.
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# MonoDevelop
+*.userprefs
+
+# Build directories
+[Bb]uild/
+[Bb]uilds/
+
+# Common lock files
+project.lock.json
+project.fragment.lock.json
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Visual Studio Code workspace settings
+.vscode/
+
+# Node.js (if using frontend assets)
+node_modules/
+
+# Logs
+*.log
+
+# Dotnet tool manifest
+.config/
+
+# Coverage & test results
+TestResults/
+*.coverage
+*.coveragexml
+*.testresults
+
+# Backup & package folders
+*.bak
+*.orig
+*.swp
+*.swo
+packages/
+*.nupkg
+
+# Publish outputs
+*.publish/
+
+# Others
+_ReSharper*/
+*.DotSettings.user
+.idea/
+*.vs/
+.vs/
+
+# EF Core migrations snapshots
+Migrations/*Snapshot.cs
+
+# Rider IDE
+.idea/
+
+# Local tool configurations
+tools/
+
+# Docker local files
+docker-compose.override.yml

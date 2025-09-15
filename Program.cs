@@ -1,58 +1,31 @@
-using DotNetCore.CAP;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
-var builder = WebApplication.CreateBuilder(args);
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.Configure<ApiClientOptions>(
+    builder.Configuration.GetSection("ApiClient"));
 
-builder.Services.AddCap(x =>
+builder.Services.AddWindowsService(options =>
 {
-    x.UseMySql(builder.Configuration.GetConnectionString("Default")
-              ?? throw new InvalidOperationException("Connection string not found"));
-
-    x.UseRabbitMQ(cfg =>
-    {
-        cfg.HostName = builder.Configuration["CAP:RabbitMQ:HostName"] ?? "localhost";
-        cfg.UserName = builder.Configuration["CAP:RabbitMQ:UserName"] ?? "guest";
-        cfg.Password = builder.Configuration["CAP:RabbitMQ:Password"] ?? "guest";
-    });
-
-    x.FailedRetryCount = 5; // More robust retry
-    x.Version = "v1";       // Version your messages
+    options.ServiceName = "OtelDotnetTestWorkerService";
 });
 
-// Register your custom services here, e.g., repositories, subscribers, etc.
+// Named HttpClient (point to the API you intend to call)
+builder.Services.AddHttpClient("api", (sp, client) =>
+{
+    var opts = sp.GetRequiredService<
+        Microsoft.Extensions.Options.IOptions<ApiClientOptions>>().Value;
 
-builder.Services.AddTransient<OrderRepository>();
-builder.Services.AddTransient<PaymentRepository>();
-builder.Services.AddTransient<PaymentSubscriber>();
-builder.Services.AddTransient<TraceSubscriber>();
+    client.BaseAddress = new Uri(opts.BaseAddress);
+    client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+});
 
-// Health checks
-builder.Services.AddHealthChecks();
+// Register the worker
+builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
-
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path == "/")
-    {
-        context.Response.Redirect("/swagger");
-        return;
-    }
-    await next();
-});
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.MapControllers();
-
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    Predicate = _ => true,
-});
-
 app.Run();
